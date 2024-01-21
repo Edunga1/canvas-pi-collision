@@ -7,6 +7,10 @@ class Canvas {
     this.context = this.canvas.getContext("2d")
   }
 
+  get height() {
+    return this.canvas.height
+  }
+
   #createCanvas(width, height) {
     const canvas = this.document.createElement("canvas")
     canvas.width = width
@@ -27,32 +31,60 @@ class Canvas {
   }
 }
 
+class Vector {
+  constructor(x, y) {
+    this.x = x
+    this.y = y
+  }
+
+  add(other) {
+    return new Vector(this.x + other.x, this.y + other.y)
+  }
+
+  mul(factor) {
+    return new Vector(this.x * factor, this.y * factor)
+  }
+}
+
 class World {
   constructor(canvas) {
     this.canvas = canvas
     this.entities = [
-      {x: 10, y: 10, width: 50, height: 50, velocity: {x: 1, y: 0}, color: "red"},
-      {x: 300, y: 10, width: 50, height: 50, velocity: {x: -1, y: 0}, color: "green"},
+      {x: 150, y: 10, w: 50, h: 50, m: 1, v: new Vector(0, 0), cl: "red"},
+      {x: 300, y: 10, w: 50, h: 50, m: 10, v: new Vector(-1, 0), cl: "green"},
     ]
   }
 
   #update() {
     this.entities.forEach((entity) => {
-      entity.x += entity.velocity.x
-      entity.y += entity.velocity.y
-      if (entity.x < 0 || entity.x > this.canvas.canvas.width) {
-        entity.velocity.x *= -1
-      }
-      if (entity.y < 0 || entity.y > this.canvas.canvas.height) {
-        entity.velocity.y *= -1
-      }
+      this.entities.forEach((other) => {
+        if (entity === other) {
+          return
+        }
+        if (entity.x < other.x + other.w &&
+            entity.x + entity.w > other.x &&
+            entity.y < other.y + other.h &&
+            entity.y + entity.h > other.y) {
+          const entityNewV = entity.v.mul((entity.m - other.m) / (entity.m + other.m)).add(other.v.mul((2 * other.m) / (entity.m + other.m)))
+          const otherNewV = entity.v.mul((2 * other.m) / (entity.m + other.m)).add(other.v.mul((other.m - entity.m) / (entity.m + other.m)))
+          entity.v = entityNewV
+          other.v = otherNewV
+        }
+        // check walls
+        if (entity.x < 0) {
+          entity.x = 0
+          entity.v.x *= -1
+        }
+      })
+      entity.x += entity.v.x
+      entity.y += entity.v.y
     })
   }
 
   #render() {
     this.canvas.draw((canvas) => {
       this.entities.forEach((entity) => {
-        canvas.addRect(entity.x, entity.y, entity.width, entity.height, entity.color)
+        canvas.addRect(entity.x, entity.y, entity.w, entity.h, entity.cl)
       })
     })
   }
