@@ -27,13 +27,15 @@ class Canvas {
   }
 
   addText(text, x, y, size = 20) {
-    this.context.fillStyle = "black"
+    this.context.fillStyle = "white"
     this.context.font = `${size}px Arial`
     this.context.fillText(text, x, y)
   }
 
   draw(func) {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    this.context.fillStyle = "black"
+    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height)
     this.context.save()
     func(this)
     this.context.restore()
@@ -59,7 +61,7 @@ class World {
   constructor(canvas) {
     this.canvas = canvas
     this.entities = [
-      {x: 150, y: 200, w: 50, h: 50, m: 1, v: new Vector(1, 0), cl: "red"},
+      {x: 150, y: 200, w: 50, h: 50, m: 1, v: new Vector(0, 0), cl: "red"},
       {x: 300, y: 200, w: 50, h: 50, m: 10, v: new Vector(-1, 0), cl: "green"},
     ]
     this.count = 0
@@ -85,17 +87,24 @@ class World {
             entity.y <= other.y + other.h &&
             entity.y + entity.h >= other.y
         ) {
+          this.#increaseCollisionCount()
+          // calculate new velocities
           const entityNewV = entity.v.mul((entity.m - other.m) / (entity.m + other.m)).add(other.v.mul((2 * other.m) / (entity.m + other.m)))
           const otherNewV = entity.v.mul((2 * other.m) / (entity.m + other.m)).add(other.v.mul((other.m - entity.m) / (entity.m + other.m)))
           entity.v = entityNewV
           other.v = otherNewV
-          this.count++
+          // move entities out of each other
+          if (entity.x < other.x) {
+            entity.x = other.x - entity.w
+          } else {
+            entity.x = other.x + other.w
+          }
         }
         // check borders
         if (entity.x < 0) {
+          this.#increaseCollisionCount()
           entity.x = 0
           entity.v.x *= -1
-          this.count++
         }
       })
       entity.x += entity.v.x
@@ -117,6 +126,10 @@ class World {
         )
       })
     })
+  }
+
+  #increaseCollisionCount() {
+    this.count++
   }
 }
 
