@@ -18,9 +18,18 @@ class Canvas {
     return canvas
   }
 
-  addRect(x, y, width, height, color) {
+  addRect(x, y, width, height, color, text = '') {
     this.context.fillStyle = color || "black"
     this.context.fillRect(x, y, width, height)
+    this.context.fillStyle = "black"
+    this.context.font = "10px Arial"
+    this.context.fillText(text, x, y + height / 2)
+  }
+
+  addText(text, x, y, size = 20) {
+    this.context.fillStyle = "black"
+    this.context.font = `${size}px Arial`
+    this.context.fillText(text, x, y)
   }
 
   draw(func) {
@@ -50,9 +59,19 @@ class World {
   constructor(canvas) {
     this.canvas = canvas
     this.entities = [
-      {x: 150, y: 10, w: 50, h: 50, m: 1, v: new Vector(0, 0), cl: "red"},
-      {x: 300, y: 10, w: 50, h: 50, m: 10, v: new Vector(-1, 0), cl: "green"},
+      {x: 150, y: 200, w: 50, h: 50, m: 1, v: new Vector(1, 0), cl: "red"},
+      {x: 300, y: 200, w: 50, h: 50, m: 10, v: new Vector(-1, 0), cl: "green"},
     ]
+    this.count = 0
+  }
+
+  run() {
+    const that = this
+    requestAnimationFrame(function tick() {
+      that.#update()
+      that.#render()
+      requestAnimationFrame(tick)
+    })
   }
 
   #update() {
@@ -61,19 +80,22 @@ class World {
         if (entity === other) {
           return
         }
-        if (entity.x < other.x + other.w &&
-            entity.x + entity.w > other.x &&
-            entity.y < other.y + other.h &&
-            entity.y + entity.h > other.y) {
+        if (entity.x <= other.x + other.w &&
+            entity.x + entity.w >= other.x &&
+            entity.y <= other.y + other.h &&
+            entity.y + entity.h >= other.y
+        ) {
           const entityNewV = entity.v.mul((entity.m - other.m) / (entity.m + other.m)).add(other.v.mul((2 * other.m) / (entity.m + other.m)))
           const otherNewV = entity.v.mul((2 * other.m) / (entity.m + other.m)).add(other.v.mul((other.m - entity.m) / (entity.m + other.m)))
           entity.v = entityNewV
           other.v = otherNewV
+          this.count++
         }
-        // check walls
+        // check borders
         if (entity.x < 0) {
           entity.x = 0
           entity.v.x *= -1
+          this.count++
         }
       })
       entity.x += entity.v.x
@@ -83,18 +105,17 @@ class World {
 
   #render() {
     this.canvas.draw((canvas) => {
+      canvas.addText(`Count: ${this.count}`, 10, 20)
       this.entities.forEach((entity) => {
-        canvas.addRect(entity.x, entity.y, entity.w, entity.h, entity.cl)
+        canvas.addRect(
+          entity.x,
+          entity.y,
+          entity.w,
+          entity.h,
+          entity.cl,
+          `${entity.m}m  ${entity.v.x.toFixed(2)}v`
+        )
       })
-    })
-  }
-
-  run() {
-    const that = this
-    requestAnimationFrame(function tick() {
-      that.#update()
-      that.#render()
-      requestAnimationFrame(tick)
     })
   }
 }
