@@ -103,39 +103,45 @@ class World {
   }
 
   #update() {
-    this.entities.forEach((entity) => {
-      this.entities.forEach((other) => {
-        if (entity === other) {
-          return
+    this.#retriveEntities((a, b) => {
+      if (this.#checkCollision(a, b)) {
+        this.#increaseCollisionCount()
+        // calculate new velocities
+        const entityNewV = a.v.mul((a.m - b.m) / (a.m + b.m)).add(b.v.mul((2 * b.m) / (a.m + b.m)))
+        const otherNewV = a.v.mul((2 * b.m) / (a.m + b.m)).add(b.v.mul((b.m - a.m) / (a.m + b.m)))
+        a.v = entityNewV
+        b.v = otherNewV
+        // move entities out of each other
+        if (a.x < b.x) {
+          a.x = b.x - a.w
+        } else {
+          a.x = b.x + b.w
         }
-        if (entity.x <= other.x + other.w &&
-            entity.x + entity.w >= other.x &&
-            entity.y <= other.y + other.h &&
-            entity.y + entity.h >= other.y
-        ) {
-          this.#increaseCollisionCount()
-          // calculate new velocities
-          const entityNewV = entity.v.mul((entity.m - other.m) / (entity.m + other.m)).add(other.v.mul((2 * other.m) / (entity.m + other.m)))
-          const otherNewV = entity.v.mul((2 * other.m) / (entity.m + other.m)).add(other.v.mul((other.m - entity.m) / (entity.m + other.m)))
-          entity.v = entityNewV
-          other.v = otherNewV
-          // move entities out of each other
-          if (entity.x < other.x) {
-            entity.x = other.x - entity.w
-          } else {
-            entity.x = other.x + other.w
-          }
-        }
-        // check borders
-        if (entity.x < 0) {
-          this.#increaseCollisionCount()
-          entity.x = 0
-          entity.v.x *= -1
-        }
-      })
-      entity.x += entity.v.x
-      entity.y += entity.v.y
+      }
+      // check borders
+      if (a.x < 0) {
+        this.#increaseCollisionCount()
+        a.x = 0
+        a.v.x *= -1
+      }
+      a.x += a.v.x
+      a.y += a.v.y
     })
+  }
+
+  #retriveEntities(func) {
+    this.entities.forEach(a => {
+      this.entities.forEach(b => {
+        if (a === b) return
+        func(a, b)
+      })
+    })
+  }
+
+  #checkCollision(a, b) {
+    if (a.x > b.x + b.w || a.x + a.w < b.x) return false
+    if (a.y > b.y + b.h || a.y + a.h < b.y) return false
+    return true
   }
 
   #render() {
