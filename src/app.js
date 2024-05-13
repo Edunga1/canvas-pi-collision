@@ -106,36 +106,31 @@ class World {
     this.#retriveEntities((a, b) => {
       if (this.#checkCollision(a, b)) {
         this.#increaseCollisionCount()
-        // calculate new velocities
-        const entityNewV = a.v.mul((a.m - b.m) / (a.m + b.m)).add(b.v.mul((2 * b.m) / (a.m + b.m)))
-        const otherNewV = a.v.mul((2 * b.m) / (a.m + b.m)).add(b.v.mul((b.m - a.m) / (a.m + b.m)))
-        a.v = entityNewV
-        b.v = otherNewV
-        // move entities out of each other
-        if (a.x < b.x) {
-          a.x = b.x - a.w
-        } else {
-          a.x = b.x + b.w
-        }
+        const [v1, v2] = this.#calculateNewVelocities(a, b)
+        a.v = new Vector(v1, a.v.y)
+        b.v = new Vector(v2, b.v.y)
       }
+
       // check borders
       if (a.x < 0) {
         this.#increaseCollisionCount()
         a.x = 0
         a.v.x *= -1
       }
-      a.x += a.v.x
-      a.y += a.v.y
+    })
+    this.entities.forEach((entity) => {
+      entity.x += entity.v.x
+      entity.y += entity.v.y
     })
   }
 
   #retriveEntities(func) {
-    this.entities.forEach(a => {
-      this.entities.forEach(b => {
-        if (a === b) return
-        func(a, b)
-      })
-    })
+    const size = this.entities.length
+    for (let i = 0; i < size; i++) {
+      for (let j = i + 1; j < size; j++) {
+        func(this.entities[i], this.entities[j])
+      }
+    }
   }
 
   #checkCollision(a, b) {
@@ -143,6 +138,15 @@ class World {
     if (a.y > b.y + b.h || a.y + a.h < b.y) return false
     return true
   }
+
+  #calculateNewVelocities(a, b) {
+    // https://en.wikipedia.org/wiki/Elastic_collision#One-dimensional_Newtonian
+    return [
+      (a.m - b.m) / (a.m + b.m) * a.v.x + (2 * b.m) / (a.m + b.m) * b.v.x,
+      (2 * a.m) / (a.m + b.m) * a.v.x + (b.m - a.m) / (a.m + b.m) * b.v.x
+    ]
+  }
+
 
   #render() {
     this.canvas.draw((canvas) => {
