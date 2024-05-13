@@ -84,7 +84,7 @@ class World {
     this.canvas = canvas
     this.entities = [
       {x: 150, y: 200, w: 50, h: 50, m: 1, v: new Vector(0, 0), cl: "red"},
-      {x: 300, y: 200, w: 50, h: 50, m: 10, v: new Vector(-1, 0), cl: "green"},
+      {x: 300, y: 200, w: 50, h: 50, m: 64, v: new Vector(-1, 0), cl: "green"},
     ]
     this.count = 0
   }
