@@ -57,6 +57,28 @@ class Vector {
   }
 }
 
+class Timer {
+  constructor() {
+    this.tps = 1000 / 60
+    this.lastTime = 0
+    this.elapsed = 0
+    this.tickCount = 0
+  }
+  
+  elapse(time) {
+    this.elapsed += time - this.lastTime
+    this.lastTime = time
+  }
+
+  tick(func) {
+    while (this.elapsed >= this.tps) {
+      func()
+      this.elapsed -= this.tps
+      this.tickCount++
+    }
+  }
+}
+
 class World {
   constructor(canvas) {
     this.canvas = canvas
@@ -69,8 +91,12 @@ class World {
 
   run() {
     const that = this
-    requestAnimationFrame(function tick() {
-      that.#update()
+    const timer = new Timer()
+    requestAnimationFrame(function tick(time) {
+      timer.elapse(time)
+      timer.tick(() => {
+        that.#update()
+      })
       that.#render()
       requestAnimationFrame(tick)
     })
