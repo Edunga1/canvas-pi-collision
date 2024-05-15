@@ -6,9 +6,14 @@ class Canvas {
     this.container.appendChild(this.canvas)
     this.context = this.canvas.getContext("2d")
 
+    this.resize(width, height)
+  }
+
+  resize(width, height) {
     this.canvas.width = width
     this.canvas.height = height
   }
+
 
   addRect(x, y, width, height, color, text = '') {
     this.context.fillStyle = color || "black"
@@ -94,6 +99,10 @@ class World {
     })
   }
 
+  resize(width, height) {
+    this.canvas.resize(width, height)
+  }
+
   #update() {
     this.#retriveEntities((a, b) => {
       if (this.#checkCollision(a, b)) {
@@ -163,9 +172,13 @@ class World {
 
 function main() {
   const canvasEle = document.createElement("canvas")
-  const canvas = new Canvas(document, document.body, canvasEle, 500, 500)
+  const canvas = new Canvas(document, document.body, canvasEle, window.innerWidth, window.innerHeight)
   const world = new World(canvas)
   world.run()
+
+  window.addEventListener("resize", () => {
+    world.resize(window.innerWidth, window.innerHeight)
+  })
 }
 
 main()
