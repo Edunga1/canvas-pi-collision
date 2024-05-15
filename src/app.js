@@ -1,21 +1,13 @@
 class Canvas {
-  constructor(document, container, width, height) {
+  constructor(document, container, canvas, width, height) {
     this.document = document
     this.container = container
-    this.canvas = this.#createCanvas(width, height)
+    this.canvas = canvas
     this.container.appendChild(this.canvas)
     this.context = this.canvas.getContext("2d")
-  }
 
-  get height() {
-    return this.canvas.height
-  }
-
-  #createCanvas(width, height) {
-    const canvas = this.document.createElement("canvas")
-    canvas.width = width
-    canvas.height = height
-    return canvas
+    this.canvas.width = width
+    this.canvas.height = height
   }
 
   addRect(x, y, width, height, color, text = '') {
@@ -170,8 +162,10 @@ class World {
 }
 
 function main() {
-  const canvas = new Canvas(document, document.body, 500, 500)
-  new World(canvas).run()
+  const canvasEle = document.createElement("canvas")
+  const canvas = new Canvas(document, document.body, canvasEle, 500, 500)
+  const world = new World(canvas)
+  world.run()
 }
 
 main()
