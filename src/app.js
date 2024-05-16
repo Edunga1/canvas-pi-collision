@@ -79,16 +79,16 @@ class Timer {
 class World {
   constructor(canvas) {
     this.canvas = canvas
-    this.entities = [
-      {x: 150, y: 200, w: 50, h: 50, m: 1, v: new Vector(0, 0), cl: "red"},
-      {x: 300, y: 200, w: 50, h: 50, m: 64, v: new Vector(-1, 0), cl: "green"},
-    ]
+    this.entities = []
     this.count = 0
+    this.resetHandler = undefined
   }
 
   run() {
     const that = this
     const timer = new Timer()
+    this.#reset()
+
     requestAnimationFrame(function tick(time) {
       timer.elapse(time)
       timer.tick(() => {
@@ -101,6 +101,24 @@ class World {
 
   resize(width, height) {
     this.canvas.resize(width, height)
+  }
+
+  startReset() {
+    this.resetTimer = setTimeout(() => {
+      this.#reset()
+    }, 1000)
+  }
+
+  clearReset() {
+    clearTimeout(this.resetTimer)
+  }
+
+  #reset() {
+    this.entities = [
+      {x: 150, y: 200, w: 50, h: 50, m: 1, v: new Vector(0, 0), cl: "red"},
+      {x: 300, y: 200, w: 50, h: 50, m: 64, v: new Vector(-1, 0), cl: "green"},
+    ]
+    this.count = 0
   }
 
   #update() {
@@ -178,6 +196,23 @@ function main() {
 
   window.addEventListener("resize", () => {
     world.resize(window.innerWidth, window.innerHeight)
+  })
+
+  window.addEventListener("mousedown", () => {
+    world.startReset()
+  })
+
+  window.addEventListener("mouseup", () => {
+    world.clearReset()
+  })
+
+  window.addEventListener("touchstart", () => {
+    world.startReset()
+  })
+  
+  window.addEventListener("touchend", (e) => {
+    world.clearReset()
+    e.preventDefault()
   })
 }
 
