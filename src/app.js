@@ -39,21 +39,6 @@ class Canvas {
   }
 }
 
-class Vector {
-  constructor(x, y) {
-    this.x = x
-    this.y = y
-  }
-
-  add(other) {
-    return new Vector(this.x + other.x, this.y + other.y)
-  }
-
-  mul(factor) {
-    return new Vector(this.x * factor, this.y * factor)
-  }
-}
-
 class Timer {
   constructor() {
     this.tps = 1000 / 60
@@ -125,8 +110,8 @@ class World {
 
   #reset() {
     this.entities = [
-      { x: 150, y: 200, w: 50, h: 50, m: this.entity1.mass, v: new Vector(0, 0), cl: "red" },
-      { x: 300, y: 200, w: 50, h: 50, m: this.entity2.mass, v: new Vector(-1, 0), cl: "green" },
+      { x: 150, y: 200, w: 50, h: 50, m: this.entity1.mass, v: 0, cl: "red" },
+      { x: 300, y: 200, w: 50, h: 50, m: this.entity2.mass, v: -1, cl: "green" },
     ]
     this.count = 0
   }
@@ -136,20 +121,19 @@ class World {
       if (this.#checkCollision(a, b)) {
         this.#increaseCollisionCount()
         const [v1, v2] = this.#calculateNewVelocities(a, b)
-        a.v = new Vector(v1, a.v.y)
-        b.v = new Vector(v2, b.v.y)
+        a.v = v1
+        b.v = v2
       }
 
       // check borders
       if (a.x < 0) {
         this.#increaseCollisionCount()
         a.x = 0
-        a.v.x *= -1
+        a.v *= -1
       }
     })
     this.entities.forEach((entity) => {
-      entity.x += entity.v.x
-      entity.y += entity.v.y
+      entity.x += entity.v
     })
   }
 
@@ -171,8 +155,8 @@ class World {
   #calculateNewVelocities(a, b) {
     // https://en.wikipedia.org/wiki/Elastic_collision#One-dimensional_Newtonian
     return [
-      (a.m - b.m) / (a.m + b.m) * a.v.x + (2 * b.m) / (a.m + b.m) * b.v.x,
-      (2 * a.m) / (a.m + b.m) * a.v.x + (b.m - a.m) / (a.m + b.m) * b.v.x
+      (a.m - b.m) / (a.m + b.m) * a.v + (2 * b.m) / (a.m + b.m) * b.v,
+      (2 * a.m) / (a.m + b.m) * a.v + (b.m - a.m) / (a.m + b.m) * b.v
     ]
   }
 
@@ -187,7 +171,7 @@ class World {
           entity.w,
           entity.h,
           entity.cl,
-          `${entity.m}m  ${entity.v.x.toFixed(2)}v`
+          `${entity.m}m  ${entity.v.toFixed(2)}v`
         )
       })
     })
