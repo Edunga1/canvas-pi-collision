@@ -61,7 +61,7 @@ class Timer {
     this.elapsed = 0
     this.tickCount = 0
   }
-  
+
   elapse(time) {
     this.elapsed += time - this.lastTime
     this.lastTime = time
@@ -77,11 +77,21 @@ class Timer {
 }
 
 class World {
-  constructor(canvas) {
+  constructor({
+    canvas,
+    entity1 = {
+      mass: 1,
+    },
+    entity2 = {
+      mass: 1,
+    },
+  }) {
     this.canvas = canvas
     this.entities = []
     this.count = 0
     this.resetHandler = undefined
+    this.entity1 = entity1
+    this.entity2 = entity2
   }
 
   run() {
@@ -115,8 +125,8 @@ class World {
 
   #reset() {
     this.entities = [
-      {x: 150, y: 200, w: 50, h: 50, m: 1, v: new Vector(0, 0), cl: "red"},
-      {x: 300, y: 200, w: 50, h: 50, m: 64, v: new Vector(-1, 0), cl: "green"},
+      { x: 150, y: 200, w: 50, h: 50, m: this.entity1.mass, v: new Vector(0, 0), cl: "red" },
+      { x: 300, y: 200, w: 50, h: 50, m: this.entity2.mass, v: new Vector(-1, 0), cl: "green" },
     ]
     this.count = 0
   }
@@ -191,7 +201,16 @@ class World {
 function main() {
   const canvasEle = document.createElement("canvas")
   const canvas = new Canvas(document, document.body, canvasEle, window.innerWidth, window.innerHeight)
-  const world = new World(canvas)
+  const params = new URLSearchParams(window.location.search)
+  const world = new World({
+    canvas,
+    entity1: {
+      mass: params.get("m1") ?? 1,
+    },
+    entity2: {
+      mass: params.get("m2") ?? 64,
+    },
+  })
   world.run()
 
   window.addEventListener("resize", () => {
@@ -209,7 +228,7 @@ function main() {
   window.addEventListener("touchstart", () => {
     world.startReset()
   })
-  
+
   window.addEventListener("touchend", (e) => {
     world.clearReset()
     e.preventDefault()
